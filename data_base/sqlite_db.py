@@ -3,7 +3,7 @@ import sqlite3 as sq
 
 class Database:
     def __init__(self):
-        self.conn = sq.connect("data_base\chat_bot.db")
+        self.conn = sq.connect("data_base/chat_bot.db")
         self.cursor = self.conn.cursor()
         if self.conn:
             print('Data base chat_bot connected OK!')
