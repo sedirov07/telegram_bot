@@ -68,7 +68,7 @@ async def register_name(message: types.Message, state: FSMContext):
     await Registration.post.set()
 
 
-# Сохранение должности клиента, машины состояний регистрации клиента
+# Сохранение должности клиента, завершение машины состояний регистрации клиента
 async def register_post(message: types.Message, state: FSMContext):
     post = message.text.strip().title()
     user_id = message.from_user.id

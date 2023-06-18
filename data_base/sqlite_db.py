@@ -27,9 +27,6 @@ class Database:
         self.cursor.execute("SELECT name, post FROM users WHERE user_id = ?", (user_id,))
         return self.cursor.fetchone()
 
-    def close(self):
-        self.conn.close()
-
     def get_objects(self, table_name):
         self.cursor.execute("SELECT * FROM {}".format(table_name))
         rows = self.cursor.fetchall()
@@ -73,6 +70,9 @@ class Database:
             self.conn.commit()
             return True
         return False
+
+    def close(self):
+        self.conn.close()
 
 
 db = Database()
