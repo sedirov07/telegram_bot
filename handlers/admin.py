@@ -1,6 +1,6 @@
 from aiogram import types, Dispatcher
 from create_bot import bot, admin_id
-from keyboards import client_kb, kb_admin_objects, objects_keyboard,  kb_yes_no
+from keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from data_base import sqlite_db
@@ -25,7 +25,7 @@ async def edit_objects(message: types.Message):
 async def select_action(message: types.Message, state: FSMContext):
     action = message.text
     # Отправляем сообщение с выбором локации объекта
-    await message.answer('Выберите локацию объекта:', reply_markup=objects_keyboard)
+    await message.answer('Выберите локацию объекта:', reply_markup=kb_objects)
     # Сохраняем выбранное действие в контексте пользователя
     async with state.proxy() as data:
         data['action'] = action
