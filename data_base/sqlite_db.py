@@ -89,6 +89,9 @@ class Database:
 
         :param table_name: The name of the table to edit the object in.
         :param obj_id: The ID of the object to edit.
+        :param description: The description of object.
+        :param photo: The photo of object
+        :return: None
         """
         query = f"UPDATE {table_name} SET "
         if description:

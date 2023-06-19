@@ -1,9 +1,9 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from ..create_bot import bot, ADMIN_ID
-from ..keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
-from ..data_base import sqlite_db
+from create_bot import bot, ADMIN_ID
+from keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
+from data_base import sqlite_db
 
 
 # Определение состояний FSM для работы с объектами
@@ -93,7 +93,7 @@ async def set_object_type(message: types.Message, state: FSMContext):
 
     if action in ('Посмотреть объекты', 'Удалить описание объекта'):
         await client_kb.kb_all_objects(1, data['object_type'])
-        await message.answer('Выберите:', reply_markup=client_kb.KEYBOARD)
+        await message.answer('Выберите:', reply_markup=client_kb.keyboard)
         await AdminEdit.choose_object.set()
     elif action == 'Добавить объект':
         await message.answer('Введите название объекта, который вы хотите добавить.')
@@ -198,7 +198,7 @@ async def process_callback_page(callback_query: types.CallbackQuery, state: FSMC
             await client_kb.kb_all_objects(page + 1, data['object_type'])
             await bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
                                                 message_id=callback_query.message.message_id,
-                                                reply_markup=client_kb.KEYBOARD)
+                                                reply_markup=client_kb.keyboard)
 
 
 # Удаление описания объекта

@@ -1,10 +1,10 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from ..handlers import admin
-from ..create_bot import bot, ADMIN_ID
-from ..keyboards import kb_client, kb_objects, kb_client_reg, kb_yes_no, client_kb
-from ..data_base import sqlite_db
+from handlers import admin
+from create_bot import bot, ADMIN_ID
+from keyboards import kb_client, kb_objects, kb_client_reg, kb_yes_no, client_kb
+from data_base import sqlite_db
 
 
 # Определение состояний FSM для регистрации
@@ -250,7 +250,7 @@ async def choose_object(message: types.Message, state: FSMContext):
             data['obj'] = 'factory'
     # Запрос на вывод первой страницы списка объектов выбранной локации
     await client_kb.kb_all_objects(1, data['obj'])
-    await message.answer('Выберите:', reply_markup=client_kb.KEYBOARD)
+    await message.answer('Выберите:', reply_markup=client_kb.keyboard)
     await Objects.ChooseObj.set()
 
 
@@ -297,7 +297,7 @@ async def process_callback_page(callback_query: types.CallbackQuery, state: FSMC
             await client_kb.kb_all_objects(page + 1, data['obj'])
             await bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
                                                 message_id=callback_query.message.message_id,
-                                                reply_markup=client_kb.KEYBOARD)
+                                                reply_markup=client_kb.keyboard)
 
 
 # Добавление описания объекта
