@@ -1,4 +1,4 @@
-import logging
+import logging  # логирование
 from aiogram.utils import executor
 from create_bot import dp
 from handlers import client, admin
@@ -11,7 +11,7 @@ async def on_startup(_):
 
 
 # Закрытие базы данных при выключении бота
-async def on_shutdown(_):
+async def on_shutdown(_):  # закрытие базы данных при выключении бота
     sqlite_db.db.close()
 
 

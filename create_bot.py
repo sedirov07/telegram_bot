@@ -1,7 +1,8 @@
 from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
-from config_reader import config
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from config_reader import config
+
 
 # Создание памяти для FSM
 storage = MemoryStorage()
@@ -11,4 +12,4 @@ bot = Bot(token=config.bot_token.get_secret_value())
 dp = Dispatcher(bot, storage=storage)
 
 # Добавление id администратора
-admin_id = 530261570
+ADMIN_ID = 530261570

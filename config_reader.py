@@ -1,20 +1,16 @@
 from pydantic import BaseSettings, SecretStr
 
 
-# Сохранение токена бота в зашифрованную строку
 class Settings(BaseSettings):
+    """Configuration settings for the bot."""
+
     bot_token: SecretStr
 
-    # Вложенный класс с дополнительными указаниями для настроек
     class Config:
-        # Имя файла, откуда будут прочитаны данные
-        # (относительно текущей рабочей директории)
+        """Additional configuration options for the settings."""
+
         env_file = '.env'
-        # Кодировка читаемого файла
         env_file_encoding = 'utf-8'
 
 
-# При импорте файла сразу создастся
-# и провалидируется объект конфига,
-# который можно далее импортировать из разных мест
 config = Settings()

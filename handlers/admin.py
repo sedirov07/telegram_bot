@@ -1,8 +1,8 @@
 from aiogram import types, Dispatcher
-from create_bot import bot, admin_id
-from keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from create_bot import bot, ADMIN_ID
+from keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
 from data_base import sqlite_db
 
 
@@ -44,7 +44,7 @@ async def set_object_type(message: types.Message, state: FSMContext):
         data['object_type'] = object_type
         action = data['action']
 
-    if action == 'Посмотреть объекты' or action == 'Удалить описание объекта':
+    if action in ('Посмотреть объекты', 'Удалить описание объекта'):
         await client_kb.kb_all_objects(1, data['object_type'])
         await message.answer('Выберите:', reply_markup=client_kb.keyboard)
         await AdminEdit.choose_object.set()
@@ -86,26 +86,34 @@ async def process_callback_page(callback_query: types.CallbackQuery, state: FSMC
                     row = 1
                 for i in range(row):
                     if type(obj_descr) == list:
-                        await bot.send_message(callback_query.message.chat.id, f'Описание № {i+1}: {obj_descr[i]}')
+                        await bot.send_message(callback_query.message.chat.id,
+                                               f'Описание № {i+1}: {obj_descr[i]}')
                     else:
-                        await bot.send_message(callback_query.message.chat.id, f'Описание № {i + 1}: {obj_descr}')
+                        await bot.send_message(callback_query.message.chat.id,
+                                               f'Описание № {i + 1}: {obj_descr}')
                     if obj_photos and type(obj_photos) == list and i < len(obj_photos):
-                        await bot.send_photo(callback_query.message.chat.id, photo=obj_photos[i])
+                        await bot.send_photo(callback_query.message.chat.id,
+                                             photo=obj_photos[i])
                     elif obj_photos and i < 1:
-                        await bot.send_photo(callback_query.message.chat.id, photo=obj_photos)
+                        await bot.send_photo(callback_query.message.chat.id,
+                                             photo=obj_photos)
                     else:
-                        await bot.send_message(callback_query.message.chat.id, 'Фотография отсутствует.')
+                        await bot.send_message(callback_query.message.chat.id,
+                                               'Фотография отсутствует.')
             else:
-                await bot.send_message(callback_query.message.chat.id, f'Описание и фотография отсутствуют.')
+                await bot.send_message(callback_query.message.chat.id,
+                                       'Описание и фотография отсутствуют.')
                 await state.finish()
                 # Возвращаем администратора в главное меню
                 await edit_objects(callback_query.message)
                 return
 
             # Удаляем предыдущую клавиатуру
-            await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
+            await bot.delete_message(callback_query.message.chat.id,
+                                     callback_query.message.message_id)
 
-        # Если было выбрано действие "Посмотреть объекты", то после вывода описания объекта, то завершаем FSM и
+        # Если было выбрано действие "Посмотреть объекты",
+        # то после вывода описания объекта, то завершаем FSM и
         # возвращаем администратора в главное меню
         if data['action'] == 'Посмотреть объекты':
             await state.finish()
@@ -114,7 +122,8 @@ async def process_callback_page(callback_query: types.CallbackQuery, state: FSMC
 
         # Если было выбрано действие "Удалить описание объекта"
         elif data['action'] == 'Удалить описание объекта':
-            await bot.send_message(callback_query.message.chat.id, 'Вы действительно хотите удалить описание объекта?',
+            await bot.send_message(callback_query.message.chat.id,
+                                   'Вы действительно хотите удалить описание объекта?',
                                    reply_markup=kb_yes_no)
             await AdminEdit.delete_object.set()
 
@@ -156,11 +165,13 @@ async def add_object(message: types.Message, state: FSMContext):
 
 # Регистрация хендлеров
 def register_handlers_admin(dp: Dispatcher):
-    dp.register_message_handler(edit_objects, user_id=admin_id)
-    dp.register_message_handler(select_action, user_id=admin_id, state=AdminEdit.select_action)
-    dp.register_message_handler(set_object_type, text=['Квартира', 'Завод'], user_id=admin_id,
+    dp.register_message_handler(edit_objects, user_id=ADMIN_ID)
+    dp.register_message_handler(select_action, user_id=ADMIN_ID,
+                                state=AdminEdit.select_action)
+    dp.register_message_handler(set_object_type, text=['Квартира', 'Завод'], user_id=ADMIN_ID,
                                 state=AdminEdit.set_object_type)
-    dp.register_callback_query_handler(process_callback_page, lambda c: True, state=AdminEdit.choose_object)
-    dp.register_message_handler(delete_object, text=['Да', 'Нет'], user_id=admin_id,
+    dp.register_callback_query_handler(process_callback_page, lambda c: True,
+                                       state=AdminEdit.choose_object)
+    dp.register_message_handler(delete_object, text=['Да', 'Нет'], user_id=ADMIN_ID,
                                 state=AdminEdit.delete_object)
-    dp.register_message_handler(add_object, user_id=admin_id, state=AdminEdit.add_object)
+    dp.register_message_handler(add_object, user_id=ADMIN_ID, state=AdminEdit.add_object)
