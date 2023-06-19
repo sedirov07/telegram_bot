@@ -1,14 +1,15 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
-from data_base import sqlite_db
 import math
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton,\
+    InlineKeyboardButton, InlineKeyboardMarkup
+from ..data_base import sqlite_db
 
 
-keyboard = None
+KEYBOARD = None
 
 
 # Создание клавиатуры из списка объектов выбранной локации по разделению на страницы
 async def kb_all_objects(page_now, objects):
-    global keyboard
+    global KEYBOARD
     data = sqlite_db.db.get_objects(objects)
     # Разбиваем данные на страницы по 5 строк
     page_size = 5
@@ -19,7 +20,7 @@ async def kb_all_objects(page_now, objects):
     keyboard = InlineKeyboardMarkup(row_width=1)
     # Вывод только первой страницы
     for i, page in enumerate(pages[page_now-1:page_now]):
-        for key, value in page:
+        for key in page:
             button = InlineKeyboardButton(key, callback_data=f'page_{i}_{key}')
             keyboard.add(button)
 
@@ -31,6 +32,8 @@ async def kb_all_objects(page_now, objects):
                 button = InlineKeyboardButton(button_text, callback_data=f'page_{i}_')
                 keyboard.add(button)
 
+    # Assign the generated keyboard to the global variable KEYBOARD
+    KEYBOARD = keyboard
 
 # Создание кнопок
 b_reg = KeyboardButton(text="Регистрация")

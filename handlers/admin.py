@@ -1,13 +1,21 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from create_bot import bot, ADMIN_ID
-from keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
-from data_base import sqlite_db
+from ..create_bot import bot, ADMIN_ID
+from ..keyboards import client_kb, kb_admin_objects, kb_objects,  kb_yes_no
+from ..data_base import sqlite_db
 
 
 # Определение состояний FSM для работы с объектами
 class AdminEdit(StatesGroup):
+    """
+    A state machine for editing objects in an administrative panel.
+
+    This state machine allows administrators to select an action (delete or add),
+    select an object type (e.g. user, product), choose an object to edit, and perform
+    the corresponding action on that object. It uses the `aiogram.dispatcher.filters.state`
+    module to manage the state transitions.
+    """
     select_action = State()
     select_object_type = State()
     set_object_type = State()
@@ -18,11 +26,36 @@ class AdminEdit(StatesGroup):
 
 # Вывод возможноых действий администратора
 async def edit_objects(message: types.Message):
+    """
+    Sends a message to the user asking them to choose an option using a custom keyboard,
+    and sets the state of the AdminEdit state machine to select_action.
+
+    Args:
+        message (:obj:`types.Message`): The incoming message from the user.
+
+    Returns:
+        None
+    """
     await message.answer("Выберите:", reply_markup=kb_admin_objects)
     await AdminEdit.select_action.set()
 
 
 async def select_action(message: types.Message, state: FSMContext):
+    """
+    Handles the user input for selecting an action (delete or add)
+    in the AdminEdit state machine.
+    The function saves the selected action in the user's context,
+    sends a message to the user asking them
+    to choose a location for the object, and sets the state of the
+    AdminEdit state machine to set_object_type.
+
+    Args:
+        message (:obj:`types.Message`): The incoming message from the user.
+        state (:obj:`FSMContext`): The current state of the AdminEdit state machine.
+
+    Returns:
+        None
+    """
     action = message.text
     # Отправляем сообщение с выбором локации объекта
     await message.answer('Выберите локацию объекта:', reply_markup=kb_objects)
@@ -34,6 +67,20 @@ async def select_action(message: types.Message, state: FSMContext):
 
 # Сохранение локации объекта
 async def set_object_type(message: types.Message, state: FSMContext):
+    """
+    Handles the user input for selecting an object type
+    (e.g. apartment or factory) in the AdminEdit state machine.
+    The function saves the selected object type in the user's context,
+    and checks the selected action to determine
+    what the next state should be.
+
+    Args:
+        message (:obj:`types.Message`): The incoming message from the user.
+        state (:obj:`FSMContext`): The current state of the AdminEdit state machine.
+
+    Returns:
+        None
+    """
     object_type = message.text
     if object_type == 'Квартира':
         object_type = 'apartment'
@@ -46,7 +93,7 @@ async def set_object_type(message: types.Message, state: FSMContext):
 
     if action in ('Посмотреть объекты', 'Удалить описание объекта'):
         await client_kb.kb_all_objects(1, data['object_type'])
-        await message.answer('Выберите:', reply_markup=client_kb.keyboard)
+        await message.answer('Выберите:', reply_markup=client_kb.KEYBOARD)
         await AdminEdit.choose_object.set()
     elif action == 'Добавить объект':
         await message.answer('Введите название объекта, который вы хотите добавить.')
@@ -55,6 +102,23 @@ async def set_object_type(message: types.Message, state: FSMContext):
 
 # Обработчик нажатий кнопки переключения страницы / объекта
 async def process_callback_page(callback_query: types.CallbackQuery, state: FSMContext):
+    """
+    Handles the user input for selecting an object page or object
+    in the AdminEdit state machine.
+    The function retrieves information about the selected object
+    and sends it to the user if necessary.
+    If the selected action is "Посмотреть объекты", the function
+    ends the FSM and returns the user to the main menu.
+    If the selected action is "Удалить описание объекта",
+    the function prompts the user to confirm the deletion.
+
+    Args:
+        callback_query (:obj:`types.CallbackQuery`): The incoming callback query from the user.
+        state (:obj:`FSMContext`): The current state of the AdminEdit state machine.
+
+    Returns:
+        None
+    """
     data_kb = callback_query.data.split('_')
     # Получаем номер страницы или объекта
     page = int(data_kb[1])
@@ -80,18 +144,18 @@ async def process_callback_page(callback_query: types.CallbackQuery, state: FSMC
             # Если была нажата кнопка с объектом, то выводим администратору описание объекта
             await bot.send_message(callback_query.message.chat.id, f'{obj_name}')
             if obj_descr:
-                if type(obj_descr) == list:
+                if isinstance(obj_descr, list):
                     row = len(obj_descr)
                 else:
                     row = 1
                 for i in range(row):
-                    if type(obj_descr) == list:
+                    if isinstance(obj_descr, list):
                         await bot.send_message(callback_query.message.chat.id,
                                                f'Описание № {i+1}: {obj_descr[i]}')
                     else:
                         await bot.send_message(callback_query.message.chat.id,
                                                f'Описание № {i + 1}: {obj_descr}')
-                    if obj_photos and type(obj_photos) == list and i < len(obj_photos):
+                    if obj_photos and isinstance(obj_photos, list) and i < len(obj_photos):
                         await bot.send_photo(callback_query.message.chat.id,
                                              photo=obj_photos[i])
                     elif obj_photos and i < 1:
@@ -134,11 +198,21 @@ async def process_callback_page(callback_query: types.CallbackQuery, state: FSMC
             await client_kb.kb_all_objects(page + 1, data['object_type'])
             await bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
                                                 message_id=callback_query.message.message_id,
-                                                reply_markup=client_kb.keyboard)
+                                                reply_markup=client_kb.KEYBOARD)
 
 
 # Удаление описания объекта
 async def delete_object(message: types.Message, state: FSMContext):
+    """
+    Deletes the description of an object from the database if the user confirms deletion.
+
+    Args:
+        message (:obj:`types.Message`): The incoming message object from the user.
+        state (:obj:`FSMContext`): The current state of the AdminEdit state machine.
+
+    Returns:
+        None
+    """
     async with state.proxy() as data:
         object_type = data['object_type']
         obj_id = data['obj_id']
@@ -152,6 +226,16 @@ async def delete_object(message: types.Message, state: FSMContext):
 
 # Добавление нового объекта
 async def add_object(message: types.Message, state: FSMContext):
+    """
+    Adds a new object to the database if it does not already exist.
+
+    Args:
+        message (:obj:`types.Message`): The incoming message object from the user.
+        state (:obj:`FSMContext`): The current state of the AdminEdit state machine.
+
+    Returns:
+        None
+    """
     async with state.proxy() as data:
         data['obj'] = message.text
         object_type = data['object_type']
@@ -164,14 +248,24 @@ async def add_object(message: types.Message, state: FSMContext):
 
 
 # Регистрация хендлеров
-def register_handlers_admin(dp: Dispatcher):
-    dp.register_message_handler(edit_objects, user_id=ADMIN_ID)
-    dp.register_message_handler(select_action, user_id=ADMIN_ID,
-                                state=AdminEdit.select_action)
-    dp.register_message_handler(set_object_type, text=['Квартира', 'Завод'], user_id=ADMIN_ID,
-                                state=AdminEdit.set_object_type)
-    dp.register_callback_query_handler(process_callback_page, lambda c: True,
-                                       state=AdminEdit.choose_object)
-    dp.register_message_handler(delete_object, text=['Да', 'Нет'], user_id=ADMIN_ID,
-                                state=AdminEdit.delete_object)
-    dp.register_message_handler(add_object, user_id=ADMIN_ID, state=AdminEdit.add_object)
+def register_handlers_admin(dispatcher: Dispatcher):
+    """
+    Registers the message handlers for the admin panel.
+
+    Args:
+        dispatcher (:obj:`Dispatcher`): The Dispatcher instance.
+
+    Returns:
+        None
+    """
+    dispatcher.register_message_handler(edit_objects, user_id=ADMIN_ID)
+    dispatcher.register_message_handler(select_action, user_id=ADMIN_ID,
+                                        state=AdminEdit.select_action)
+    dispatcher.register_message_handler(set_object_type, text=['Квартира', 'Завод'],
+                                        user_id=ADMIN_ID,
+                                        state=AdminEdit.set_object_type)
+    dispatcher.register_callback_query_handler(process_callback_page, lambda c: True,
+                                               state=AdminEdit.choose_object)
+    dispatcher.register_message_handler(delete_object, text=['Да', 'Нет'], user_id=ADMIN_ID,
+                                        state=AdminEdit.delete_object)
+    dispatcher.register_message_handler(add_object, user_id=ADMIN_ID, state=AdminEdit.add_object)
