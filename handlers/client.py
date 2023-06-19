@@ -196,7 +196,7 @@ async def show_profile(message: types.Message):
         return
     # Запрос ФИО и должности пользователя из базы данных
     name, post = sqlite_db.db.get_user_info(user_id)
-    await message.answer(f"ФИО: {name}\nНазвание компании: {post}")
+    await message.answer(f"ФИО: {name}\nДолжность: {post}")
 
     # Возвращаем пользователя в главное меню
     await message.answer('Выберите', reply_markup=kb_client)
@@ -383,6 +383,8 @@ async def add_photo(message: types.Message, state: FSMContext):
             data['photo'] = ''
             # Сохраняем данные в базу данных
             sqlite_db.db.edit_table(data['obj'], data['obj_id'], data['description'], data['photo'])
+            await bot.send_message(chat_id=ADMIN_ID, text=f"Добавлено описание для {data['obj_id']} "
+                                                          f"в разделе {data['obj']}")
         await message.answer('Данные сохранены')
         await state.finish()
 
@@ -440,7 +442,7 @@ async def edit_object(message: types.Message, state: FSMContext):
         # Сохранение описания и фото в базу данных
         async with state.proxy() as data:
             sqlite_db.db.edit_table(data['obj'], data['obj_id'], data['description'], data['photo'])
-            await bot.send_message(chat_id=ADMIN_ID, text=f"Добавлено описание для {data['obj_id']}"
+            await bot.send_message(chat_id=ADMIN_ID, text=f"Добавлено описание и фотография для {data['obj_id']} "
                                                           f"в разделе {data['obj']}")
         await message.answer('Данные сохранены')
         await state.finish()
